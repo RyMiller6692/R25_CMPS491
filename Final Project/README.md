@@ -21,8 +21,8 @@ Setup and Running Instructions
 Follow these steps to run the application from GitHub:
 
 Clone the Repository:
-git clone https://github.com/your-username/msp-ticketing-system.git
-cd msp-ticketing-system
+git clone https://github.com/RyMiller6692/R25_CMPS491.git
+cd R25_CMPS491
 
 Note: Replace your-username with your actual GitHub username.
 
