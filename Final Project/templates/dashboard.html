@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MSP Incident Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .ticket-table { width: 100%; border-collapse: collapse; }
+        .ticket-table th, .ticket-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .ticket-table th { background-color: #f2f2f2; }
+        .severity-critical { background-color: #ffcccc; }
+        .severity-high { background-color: #ffe6cc; }
+        .severity-medium { background-color: #ffffcc; }
+        .severity-low { background-color: #ccffcc; }
+        button { padding: 5px 10px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>MSP Incident Response Dashboard</h1>
+    
+    <button onclick="simulateNewIncident()">Simulate New Incident</button>
+    
+    <h2>Current Tickets</h2>
+    <table class="ticket-table" id="ticketTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>Description</th>
+                <th>Client</th>
+                <th>Timestamp</th>
+                <th>Assigned To</th>
+                <th>Status</th>
+                <th>Resolved At</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="ticketBody">
+            {% for ticket in tickets %}
+            <tr class="severity-{{ ticket.severity.lower() }}">
+                <td>{{ ticket.id }}</td>
+                <td>{{ ticket.issue }}</td>
+                <td>{{ ticket.severity }}</td>
+                <td>{{ ticket.description }}</td>
+                <td>{{ ticket.client }}</td>
+                <td>{{ ticket.timestamp }}</td>
+                <td>{{ ticket.assigned_to }}</td>
+                <td>{{ ticket.status }}</td>
+                <td>{{ ticket.resolved_at or 'N/A' }}</td>
+                <td><button onclick="resolveTicket({{ ticket.id }})">Resolve</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch and update tickets
+        async function fetchTickets() {
+            const response = await fetch('/api/tickets');
+            const tickets = await response.json();
+            const tbody = document.getElementById('ticketBody');
+            tbody.innerHTML = '';
+            tickets.forEach(ticket => {
+                const row = document.createElement('tr');
+                row.className = `severity-${ticket.severity.toLowerCase()}`;
+                row.innerHTML = `
+                    <td>${ticket.id}</td>
+                    <td>${ticket.issue}</td>
+                    <td>${ticket.severity}</td>
+                    <td>${ticket.description}</td>
+                    <td>${ticket.client}</td>
+                    <td>${ticket.timestamp}</td>
+                    <td>${ticket.assigned_to}</td>
+                    <td>${ticket.status}</td>
+                    <td>${ticket.resolved_at || 'N/A'}</td>
+                    <td><button onclick="resolveTicket(${ticket.id})">Resolve</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Simulate new incident
+        async function simulateNewIncident() {
+            await fetch('/api/new_incident', { method: 'POST' });
+            fetchTickets();
+        }
+
+        // Resolve ticket
+        async function resolveTicket(ticketId) {
+            await fetch(`/api/update_ticket/${ticketId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'Resolved' })
+            });
+            fetchTickets();
+        }
+
+        // Refresh tickets every 5 seconds
+        setInterval(fetchTickets, 5000);
+    </script>
+</body>
+</html>
